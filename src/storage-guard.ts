@@ -31,27 +31,29 @@ function compactCart(value:string){
 }
 
 function install(){
+  const proto=Storage.prototype
+  const originalSet=proto.setItem
+  const originalGet=proto.getItem
   const storage=window.localStorage
-  const originalSet=storage.setItem.bind(storage)
-  const originalGet=storage.getItem.bind(storage)
-  const existing=originalGet(PRODUCT_KEY)
+  const existing=originalGet.call(storage,PRODUCT_KEY)
   if(existing){
     const compacted=compactProducts(existing)
-    if(compacted!==existing){try{originalSet(PRODUCT_KEY,compacted)}catch{}}
+    if(compacted!==existing){try{originalSet.call(storage,PRODUCT_KEY,compacted)}catch{}}
   }
-  storage.setItem=(key:string,value:string)=>{
-    if(key===PRODUCT_KEY){
+
+  proto.setItem=function(key:string,value:string){
+    if(this===storage&&key===PRODUCT_KEY){
       const compacted=compactProducts(value)
-      try{originalSet(key,compacted);return}catch{}
+      try{originalSet.call(this,key,compacted);return}catch{}
       try{
         const fallback=JSON.parse(compacted).map((p:any)=>({...p,images:[],image:p.image||''}))
-        originalSet(key,JSON.stringify(fallback));return
+        originalSet.call(this,key,JSON.stringify(fallback));return
       }catch{return}
     }
-    if(key===CART_KEY){
-      try{originalSet(key,compactCart(value));return}catch{return}
+    if(this===storage&&key===CART_KEY){
+      try{originalSet.call(this,key,compactCart(value));return}catch{return}
     }
-    originalSet(key,value)
+    originalSet.call(this,key,value)
   }
 }
 
