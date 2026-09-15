@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Search, ShoppingCart, ChevronRight, Home, Settings2, Grid2X2, MessageCircle, Instagram, Facebook, ArrowLeft, Plus, Package, Pencil } from 'lucide-react'
+import { Search, ShoppingCart, ChevronRight, Home, Settings2, Grid2X2, MessageCircle, Instagram, Facebook, ArrowLeft, Plus, Package, Pencil, Save, ExternalLink } from 'lucide-react'
 import './index.css'
 
 type Product = { name: string; price: string; old: string; image: string }
+type SocialLinks = { whatsapp: string; instagram: string; facebook: string }
 
 const products: Product[] = [
   { name: 'Moletom Oversized', price: 'R$ 179', old: 'R$ 219', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=700&q=85' },
@@ -21,15 +22,19 @@ const products: Product[] = [
 ]
 
 const heroImage = 'https://cdn.myikas.com/images/8ef8ae14-2b23-422b-b06b-a7afcbd0683a/6adbcf63-691a-4e8b-a9a9-2c0ef1255cdf/3840/du9a0452.webp'
+const defaultSocials: SocialLinks = { whatsapp: 'https://wa.me/5511987654321', instagram: 'https://instagram.com/urbanfit.oficial', facebook: 'https://facebook.com/urbanfit.oficial' }
 
 function App() {
   const [tab, setTab] = useState<'home'|'search'|'admin'>('home')
   const [query, setQuery] = useState('')
   const [cart, setCart] = useState(0)
   const [selected, setSelected] = useState<Product | null>(null)
+  const [socials, setSocials] = useState<SocialLinks>(() => { try { return JSON.parse(localStorage.getItem('urbanfit-socials') || '') || defaultSocials } catch { return defaultSocials } })
   const filtered = useMemo(() => products.filter(p => p.name.toLowerCase().includes(query.toLowerCase())), [query])
 
-  if (selected) return <ProductView product={selected} onBack={() => setSelected(null)} onAdd={() => setCart(v => v + 1)} />
+  useEffect(() => { localStorage.setItem('urbanfit-socials', JSON.stringify(socials)) }, [socials])
+
+  if (selected) return <ProductView product={selected} onBack={() => setSelected(null)} onAdd={() => setCart(v => v + 1)} whatsapp={socials.whatsapp} />
 
   return (
     <div className="app-shell">
@@ -40,7 +45,7 @@ function App() {
           <div className="top-actions"><button aria-label="carrinho" onClick={() => alert(`${cart} item(ns) no carrinho`)}><ShoppingCart size={25}/>{cart > 0 && <b className="cart-badge">{cart}</b>}</button><button aria-label="avançar"><ChevronRight size={22}/></button></div>
         </header>
 
-        {tab === 'search' ? <SearchPage query={query} setQuery={setQuery} products={filtered} onSelect={setSelected} /> : tab === 'admin' ? <AdminPage products={products} /> : (
+        {tab === 'search' ? <SearchPage query={query} setQuery={setQuery} products={filtered} onSelect={setSelected} /> : tab === 'admin' ? <AdminPage products={products} socials={socials} setSocials={setSocials} /> : (
           <main>
             <section className="feature-grid">
               <div className="orange-backdrop"></div>
@@ -48,9 +53,9 @@ function App() {
               <div className="hero-copy"><div className="hero-title">ROUPAS E<br/>CALÇADOS<br/>PARA O<br/>DIA A DIA</div></div>
               <section className="contact-card">
                 <h2>Fale com a gente</h2><p>Estamos sempre por perto!</p>
-                <Contact icon={<MessageCircle/>} title="WhatsApp" detail="(11) 98765-4321"/>
-                <Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial"/>
-                <Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial"/>
+                <Contact icon={<MessageCircle/>} title="WhatsApp" detail="Falar no WhatsApp" href={socials.whatsapp}/>
+                <Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial" href={socials.instagram}/>
+                <Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial" href={socials.facebook}/>
               </section>
               <button className="vitrine" onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}><Grid2X2 size={20}/> Vitrine</button>
             </section>
@@ -67,10 +72,15 @@ function App() {
   )
 }
 
-function Contact({icon,title,detail}:{icon:React.ReactNode;title:string;detail:string}) { return <div className="contact-row"><span className="contact-icon">{icon}</span><div><strong>{title}</strong><small>{detail}</small></div><ChevronRight size={17}/></div> }
+function Contact({icon,title,detail,href}:{icon:React.ReactNode;title:string;detail:string;href:string}) { return <a className="contact-row" href={href || '#'} target="_blank" rel="noopener noreferrer"><span className="contact-icon">{icon}</span><div><strong>{title}</strong><small>{detail}</small></div><ChevronRight size={17}/></a> }
 function ProductCard({product,onSelect}:{product:Product;onSelect:(p:Product)=>void}) { return <button className="product-card" onClick={() => onSelect(product)}><div className="product-photo"><img src={product.image} loading="lazy"/></div><div className="product-name">{product.name}</div><div className="prices"><b>{product.price}</b><del>{product.old}</del></div></button> }
 function SearchPage({query,setQuery,products,onSelect}:{query:string;setQuery:(s:string)=>void;products:Product[];onSelect:(p:Product)=>void}) { return <main className="search-page"><div className="search-box"><Search/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar produtos..."/></div><h1>Resultados</h1><div className="product-grid">{products.map(p=><ProductCard key={p.name} product={p} onSelect={onSelect}/>)}</div></main> }
-function AdminPage({products}:{products:Product[]}) { return <main className="admin-page"><div className="admin-head"><div><span className="detail-label">URBAN FIT</span><h1>Painel ADM</h1><p>Gerencie sua vitrine e seus produtos.</p></div><button className="admin-add"><Plus size={18}/> Adicionar</button></div><div className="admin-stats"><div><Package/><strong>{products.length}</strong><span>Produtos</span></div><div><ShoppingCart/><strong>0</strong><span>Pedidos</span></div><div><Pencil/><strong>Editar</strong><span>Vitrine</span></div></div><div className="admin-list"><h2>Produtos</h2>{products.slice(0,6).map(p=><div className="admin-item" key={p.name}><img src={p.image}/><div><strong>{p.name}</strong><small>{p.price}</small></div><button aria-label={`Editar ${p.name}`}><Pencil size={17}/></button></div>)}</div></main> }
-function ProductView({product,onBack,onAdd}:{product:Product;onBack:()=>void;onAdd:()=>void}) {return <main className="detail"><button className="back" onClick={onBack}><ArrowLeft/> Voltar</button><div className="detail-photo"><img src={product.image}/></div><p className="detail-label">URBAN FIT</p><h1>{product.name}</h1><div className="detail-price">{product.price} <del>{product.old}</del></div><p className="detail-text">Peça selecionada da nossa vitrine. Consulte tamanhos e disponibilidade pelo WhatsApp.</p><button className="buy" onClick={onAdd}>Adicionar ao carrinho</button></main>}
+function AdminPage({products,socials,setSocials}:{products:Product[];socials:SocialLinks;setSocials:React.Dispatch<React.SetStateAction<SocialLinks>>}) {
+  const [draft,setDraft] = useState(socials)
+  useEffect(() => setDraft(socials), [socials])
+  const save = () => setSocials(draft)
+  return <main className="admin-page"><div className="admin-head"><div><span className="detail-label">URBAN FIT</span><h1>Painel ADM</h1><p>Gerencie sua vitrine e seus produtos.</p></div><button className="admin-add"><Plus size={18}/> Adicionar</button></div><div className="admin-stats"><div><Package/><strong>{products.length}</strong><span>Produtos</span></div><div><ShoppingCart/><strong>0</strong><span>Pedidos</span></div><div><Pencil/><strong>Editar</strong><span>Vitrine</span></div></div><section className="social-settings"><div className="social-settings-head"><div><h2>Redes sociais</h2><p>Altere os links quando quiser.</p></div><button className="social-save" onClick={save}><Save size={17}/> Salvar</button></div><label>WhatsApp<input value={draft.whatsapp} onChange={e=>setDraft({...draft,whatsapp:e.target.value})} placeholder="https://wa.me/5511999999999" /></label><label>Instagram<input value={draft.instagram} onChange={e=>setDraft({...draft,instagram:e.target.value})} placeholder="https://instagram.com/sualoja" /></label><label>Facebook<input value={draft.facebook} onChange={e=>setDraft({...draft,facebook:e.target.value})} placeholder="https://facebook.com/sualoja" /></label><small className="social-help">Use o link completo da rede social. Depois de salvar, os botões da vitrine já usam os novos links.</small></section><div className="admin-list"><h2>Produtos</h2>{products.slice(0,6).map(p=><div className="admin-item" key={p.name}><img src={p.image}/><div><strong>{p.name}</strong><small>{p.price}</small></div><button aria-label={`Editar ${p.name}`}><Pencil size={17}/></button></div>)}</div></main>
+}
+function ProductView({product,onBack,onAdd,whatsapp}:{product:Product;onBack:()=>void;onAdd:()=>void;whatsapp:string}) {return <main className="detail"><button className="back" onClick={onBack}><ArrowLeft/> Voltar</button><div className="detail-photo"><img src={product.image}/></div><p className="detail-label">URBAN FIT</p><h1>{product.name}</h1><div className="detail-price">{product.price} <del>{product.old}</del></div><p className="detail-text">Peça selecionada da nossa vitrine. Consulte tamanhos e disponibilidade pelo WhatsApp.</p><button className="buy" onClick={onAdd}>Adicionar ao carrinho</button>{whatsapp && <a className="whatsapp-detail" href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={18}/> Falar no WhatsApp</a>}</main>}
 
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>)
