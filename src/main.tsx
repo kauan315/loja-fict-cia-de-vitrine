@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Search, ShoppingCart, ChevronRight, Home, User, Grid2X2, MapPin, MessageCircle, Instagram, Facebook, Music2, ArrowLeft } from 'lucide-react'
+import { Search, ShoppingCart, ChevronRight, Home, Settings2, Grid2X2, MessageCircle, Instagram, Facebook, ArrowLeft, Plus, Package, Pencil } from 'lucide-react'
 import './index.css'
 
 type Product = { name: string; price: string; old: string; image: string }
@@ -23,7 +23,7 @@ const products: Product[] = [
 const heroImage = 'https://cdn.myikas.com/images/8ef8ae14-2b23-422b-b06b-a7afcbd0683a/6adbcf63-691a-4e8b-a9a9-2c0ef1255cdf/3840/du9a0452.webp'
 
 function App() {
-  const [tab, setTab] = useState<'home'|'search'|'profile'>('home')
+  const [tab, setTab] = useState<'home'|'search'|'admin'>('home')
   const [query, setQuery] = useState('')
   const [cart, setCart] = useState(0)
   const [selected, setSelected] = useState<Product | null>(null)
@@ -40,7 +40,7 @@ function App() {
           <div className="top-actions"><button aria-label="carrinho" onClick={() => alert(`${cart} item(ns) no carrinho`)}><ShoppingCart size={25}/>{cart > 0 && <b className="cart-badge">{cart}</b>}</button><button aria-label="avançar"><ChevronRight size={22}/></button></div>
         </header>
 
-        {tab === 'search' ? <SearchPage query={query} setQuery={setQuery} products={filtered} onSelect={setSelected} /> : tab === 'profile' ? <ProfilePage /> : (
+        {tab === 'search' ? <SearchPage query={query} setQuery={setQuery} products={filtered} onSelect={setSelected} /> : tab === 'admin' ? <AdminPage products={products} /> : (
           <main>
             <section className="feature-grid">
               <div className="orange-backdrop"></div>
@@ -48,7 +48,9 @@ function App() {
               <div className="hero-copy"><div className="hero-title">ROUPAS E<br/>CALÇADOS<br/>PARA O<br/>DIA A DIA</div><button onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}>Explorar Agora <ChevronRight size={20}/></button></div>
               <section className="contact-card">
                 <h2>Fale com a gente</h2><p>Estamos sempre por perto!</p>
-                <Contact icon={<MessageCircle/>} title="WhatsApp" detail="(11) 98765-4321"/><Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial"/><Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial"/><Contact icon={<Music2/>} title="TikTok" detail="@urbanfit.oficial"/><Contact icon={<MapPin/>} title="Endereço" detail="Av. Principal, 123 - Centro"/>
+                <Contact icon={<MessageCircle/>} title="WhatsApp" detail="(11) 98765-4321"/>
+                <Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial"/>
+                <Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial"/>
               </section>
               <button className="vitrine" onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}><Grid2X2 size={23}/> Vitrine</button>
             </section>
@@ -59,7 +61,7 @@ function App() {
       <nav className="bottom-nav">
         <button className={tab==='home'?'active':''} onClick={() => setTab('home')}><Home/><span>Início</span></button>
         <button className={tab==='search'?'active':''} onClick={() => setTab('search')}><Search/><span>Busca</span></button>
-        <button className={tab==='profile'?'active':''} onClick={() => setTab('profile')}><User/><span>Perfil</span></button>
+        <button className={tab==='admin'?'active':''} onClick={() => setTab('admin')}><Settings2/><span>Painel ADM</span></button>
       </nav>
     </div>
   )
@@ -68,7 +70,7 @@ function App() {
 function Contact({icon,title,detail}:{icon:React.ReactNode;title:string;detail:string}) { return <div className="contact-row"><span className="contact-icon">{icon}</span><div><strong>{title}</strong><small>{detail}</small></div><ChevronRight size={19}/></div> }
 function ProductCard({product,onSelect}:{product:Product;onSelect:(p:Product)=>void}) { return <button className="product-card" onClick={() => onSelect(product)}><div className="product-photo"><img src={product.image} loading="lazy"/></div><div className="product-name">{product.name}</div><div className="prices"><b>{product.price}</b><del>{product.old}</del></div></button> }
 function SearchPage({query,setQuery,products,onSelect}:{query:string;setQuery:(s:string)=>void;products:Product[];onSelect:(p:Product)=>void}) { return <main className="search-page"><div className="search-box"><Search/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar produtos..."/></div><h1>Resultados</h1><div className="product-grid">{products.map(p=><ProductCard key={p.name} product={p} onSelect={onSelect}/>)}</div></main> }
-function ProfilePage(){return <main className="profile-page"><div className="profile-avatar">UF</div><h1>Urban Fit</h1><p>Moda urbana para todos os dias.</p><div className="profile-info"><strong>Atendimento</strong><span>Seg–Sáb • 09:00–18:00</span><span>WhatsApp: (11) 98765-4321</span></div></main>}
+function AdminPage({products}:{products:Product[]}) { return <main className="admin-page"><div className="admin-head"><div><span className="detail-label">URBAN FIT</span><h1>Painel ADM</h1><p>Gerencie sua vitrine e seus produtos.</p></div><button className="admin-add"><Plus size={18}/> Adicionar</button></div><div className="admin-stats"><div><Package/><strong>{products.length}</strong><span>Produtos</span></div><div><ShoppingCart/><strong>0</strong><span>Pedidos</span></div><div><Pencil/><strong>Editar</strong><span>Vitrine</span></div></div><div className="admin-list"><h2>Produtos</h2>{products.slice(0,6).map(p=><div className="admin-item" key={p.name}><img src={p.image}/><div><strong>{p.name}</strong><small>{p.price}</small></div><button aria-label={`Editar ${p.name}`}><Pencil size={17}/></button></div>)}</div></main> }
 function ProductView({product,onBack,onAdd}:{product:Product;onBack:()=>void;onAdd:()=>void}) {return <main className="detail"><button className="back" onClick={onBack}><ArrowLeft/> Voltar</button><div className="detail-photo"><img src={product.image}/></div><p className="detail-label">URBAN FIT</p><h1>{product.name}</h1><div className="detail-price">{product.price} <del>{product.old}</del></div><p className="detail-text">Peça selecionada da nossa vitrine. Consulte tamanhos e disponibilidade pelo WhatsApp.</p><button className="buy" onClick={onAdd}>Adicionar ao carrinho</button></main>}
 
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>)
