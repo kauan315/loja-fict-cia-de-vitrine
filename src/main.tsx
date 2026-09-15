@@ -45,14 +45,14 @@ function App() {
             <section className="feature-grid">
               <div className="orange-backdrop"></div>
               <div className="hero-image"><img src={heroImage} alt="Modelo Urban Fit"/></div>
-              <div className="hero-copy"><div className="hero-title">ROUPAS E<br/>CALÇADOS<br/>PARA O<br/>DIA A DIA</div><button onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}>Explorar Agora <ChevronRight size={20}/></button></div>
+              <div className="hero-copy"><div className="hero-title">ROUPAS E<br/>CALÇADOS<br/>PARA O<br/>DIA A DIA</div></div>
               <section className="contact-card">
                 <h2>Fale com a gente</h2><p>Estamos sempre por perto!</p>
                 <Contact icon={<MessageCircle/>} title="WhatsApp" detail="(11) 98765-4321"/>
                 <Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial"/>
                 <Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial"/>
               </section>
-              <button className="vitrine" onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}><Grid2X2 size={23}/> Vitrine</button>
+              <button className="vitrine" onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}><Grid2X2 size={20}/> Vitrine</button>
             </section>
             <section id="products" className="product-section"><div className="section-head"><h2>Products</h2><button onClick={() => setTab('search')}>Ver Todos <ChevronRight size={18}/></button></div><div className="product-grid">{products.map(p => <ProductCard key={p.name} product={p} onSelect={setSelected}/>)}</div></section>
           </main>
@@ -67,7 +67,7 @@ function App() {
   )
 }
 
-function Contact({icon,title,detail}:{icon:React.ReactNode;title:string;detail:string}) { return <div className="contact-row"><span className="contact-icon">{icon}</span><div><strong>{title}</strong><small>{detail}</small></div><ChevronRight size={19}/></div> }
+function Contact({icon,title,detail}:{icon:React.ReactNode;title:string;detail:string}) { return <div className="contact-row"><span className="contact-icon">{icon}</span><div><strong>{title}</strong><small>{detail}</small></div><ChevronRight size={17}/></div> }
 function ProductCard({product,onSelect}:{product:Product;onSelect:(p:Product)=>void}) { return <button className="product-card" onClick={() => onSelect(product)}><div className="product-photo"><img src={product.image} loading="lazy"/></div><div className="product-name">{product.name}</div><div className="prices"><b>{product.price}</b><del>{product.old}</del></div></button> }
 function SearchPage({query,setQuery,products,onSelect}:{query:string;setQuery:(s:string)=>void;products:Product[];onSelect:(p:Product)=>void}) { return <main className="search-page"><div className="search-box"><Search/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar produtos..."/></div><h1>Resultados</h1><div className="product-grid">{products.map(p=><ProductCard key={p.name} product={p} onSelect={onSelect}/>)}</div></main> }
 function AdminPage({products}:{products:Product[]}) { return <main className="admin-page"><div className="admin-head"><div><span className="detail-label">URBAN FIT</span><h1>Painel ADM</h1><p>Gerencie sua vitrine e seus produtos.</p></div><button className="admin-add"><Plus size={18}/> Adicionar</button></div><div className="admin-stats"><div><Package/><strong>{products.length}</strong><span>Produtos</span></div><div><ShoppingCart/><strong>0</strong><span>Pedidos</span></div><div><Pencil/><strong>Editar</strong><span>Vitrine</span></div></div><div className="admin-list"><h2>Produtos</h2>{products.slice(0,6).map(p=><div className="admin-item" key={p.name}><img src={p.image}/><div><strong>{p.name}</strong><small>{p.price}</small></div><button aria-label={`Editar ${p.name}`}><Pencil size={17}/></button></div>)}</div></main> }
