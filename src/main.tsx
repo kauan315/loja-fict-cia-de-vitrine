@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { Search, ShoppingCart, ChevronRight, Home, User, Grid2X2, MapPin, MessageCircle, Instagram, Facebook, Music2, ArrowLeft } from 'lucide-react'
 import './index.css'
 
-type Product = { name: string; price: string; old: string; image: string; tag?: string }
+type Product = { name: string; price: string; old: string; image: string }
 
 const products: Product[] = [
   { name: 'Moletom Oversized', price: 'R$ 179', old: 'R$ 219', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=700&q=85' },
@@ -20,6 +20,8 @@ const products: Product[] = [
   { name: 'Legging Esportiva', price: 'R$ 119', old: 'R$ 149', image: 'https://images.unsplash.com/photo-1506629905607-d9e0a1d0f2b8?auto=format&fit=crop&w=700&q=85' },
 ]
 
+const heroImage = 'https://cdn.myikas.com/images/8ef8ae14-2b23-422b-b06b-a7afcbd0683a/6adbcf63-691a-4e8b-a9a9-2c0ef1255cdf/3840/du9a0452.webp'
+
 function App() {
   const [tab, setTab] = useState<'home'|'search'|'profile'>('home')
   const [query, setQuery] = useState('')
@@ -33,23 +35,23 @@ function App() {
     <div className="app-shell">
       <div className="phone-content">
         <header className="topbar">
-          <div className="brand"><span className="brand-mark">◆</span><strong>URBAN FIT</strong></div>
-          <div className="top-actions"><button aria-label="carrinho" onClick={() => alert(`${cart} item(ns) no carrinho`)}><ShoppingCart size={25}/>{cart > 0 && <b className="cart-badge">{cart}</b>}</button><button><ChevronRight size={23}/></button></div>
+          <button className="menu-button" aria-label="menu"><span></span><span></span><span></span></button>
+          <div className="brand"><span className="brand-mark"><i></i></span><strong>URBAN FIT</strong></div>
+          <div className="top-actions"><button aria-label="carrinho" onClick={() => alert(`${cart} item(ns) no carrinho`)}><ShoppingCart size={25}/>{cart > 0 && <b className="cart-badge">{cart}</b>}</button><button aria-label="avançar"><ChevronRight size={22}/></button></div>
         </header>
 
         {tab === 'search' ? <SearchPage query={query} setQuery={setQuery} products={filtered} onSelect={setSelected} /> : tab === 'profile' ? <ProfilePage /> : (
           <main>
-            <section className="hero-wrap">
-              <div className="hero-image"><img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=90"/><span className="hero-glow"/></div>
+            <section className="feature-grid">
+              <div className="orange-backdrop"></div>
+              <div className="hero-image"><img src={heroImage} alt="Modelo Urban Fit"/></div>
               <div className="hero-copy"><div className="hero-title">ROUPAS E<br/>CALÇADOS<br/>PARA O<br/>DIA A DIA</div><button onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}>Explorar Agora <ChevronRight size={20}/></button></div>
+              <section className="contact-card">
+                <h2>Fale com a gente</h2><p>Estamos sempre por perto!</p>
+                <Contact icon={<MessageCircle/>} title="WhatsApp" detail="(11) 98765-4321"/><Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial"/><Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial"/><Contact icon={<Music2/>} title="TikTok" detail="@urbanfit.oficial"/><Contact icon={<MapPin/>} title="Endereço" detail="Av. Principal, 123 - Centro"/>
+              </section>
+              <button className="vitrine" onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}><Grid2X2 size={23}/> Vitrine</button>
             </section>
-
-            <section className="contact-card">
-              <h2>Fale com a gente</h2><p>Estamos sempre por perto!</p>
-              <Contact icon={<MessageCircle/>} title="WhatsApp" detail="(11) 98765-4321"/><Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial"/><Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial"/><Contact icon={<Music2/>} title="TikTok" detail="@urbanfit.oficial"/><Contact icon={<MapPin/>} title="Endereço" detail="Av. Principal, 123 - Centro"/>
-            </section>
-
-            <button className="vitrine" onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}><Grid2X2 size={23}/> Vitrine</button>
             <section id="products" className="product-section"><div className="section-head"><h2>Products</h2><button onClick={() => setTab('search')}>Ver Todos <ChevronRight size={18}/></button></div><div className="product-grid">{products.map(p => <ProductCard key={p.name} product={p} onSelect={setSelected}/>)}</div></section>
           </main>
         )}
