@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Search, ShoppingCart, ChevronRight, Home, Settings2, Grid2X2, MessageCircle, Instagram, Facebook, ArrowLeft, Plus, Package, Pencil, Save } from 'lucide-react'
+import { Search, ShoppingCart, ChevronRight, Home, Settings2, Grid2X2, MessageCircle, Instagram, Facebook, ArrowLeft, Plus, Package, Pencil, Save, Star } from 'lucide-react'
 import './index.css'
 
 type Product = { name: string; price: string; old: string; image: string }
@@ -23,6 +23,7 @@ const products: Product[] = [
 
 const heroImage = 'https://cdn.myikas.com/images/8ef8ae14-2b23-422b-b06b-a7afcbd0683a/6adbcf63-691a-4e8b-a9a9-2c0ef1255cdf/3840/du9a0452.webp'
 const defaultSocials: SocialLinks = { whatsapp: 'https://wa.me/5511987654321', instagram: 'https://instagram.com/urbanfit.oficial', facebook: 'https://facebook.com/urbanfit.oficial' }
+const defaultFeatured = products.slice(0, 4).map(p => p.name)
 
 function App() {
   const [tab, setTab] = useState<'home'|'search'|'admin'>('home')
@@ -30,9 +31,12 @@ function App() {
   const [cart, setCart] = useState(0)
   const [selected, setSelected] = useState<Product | null>(null)
   const [socials, setSocials] = useState<SocialLinks>(() => { try { return JSON.parse(localStorage.getItem('urbanfit-socials') || '') || defaultSocials } catch { return defaultSocials } })
+  const [featured, setFeatured] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('urbanfit-featured') || '') || defaultFeatured } catch { return defaultFeatured } })
   const filtered = useMemo(() => products.filter(p => p.name.toLowerCase().includes(query.toLowerCase())), [query])
+  const featuredProducts = useMemo(() => products.filter(p => featured.includes(p.name)), [featured])
 
   useEffect(() => { localStorage.setItem('urbanfit-socials', JSON.stringify(socials)) }, [socials])
+  useEffect(() => { localStorage.setItem('urbanfit-featured', JSON.stringify(featured)) }, [featured])
 
   if (selected) return <ProductView product={selected} onBack={() => setSelected(null)} onAdd={() => setCart(v => v + 1)} whatsapp={socials.whatsapp} />
 
@@ -44,14 +48,14 @@ function App() {
           <div className="brand"><span className="brand-mark"><i></i></span><strong>URBAN FIT</strong></div>
           <div className="top-actions"><button aria-label="carrinho" onClick={() => alert(`${cart} item(ns) no carrinho`)}><ShoppingCart size={25}/>{cart > 0 && <b className="cart-badge">{cart}</b>}</button><button aria-label="avançar"><ChevronRight size={22}/></button></div>
         </header>
-        {tab === 'search' ? <SearchPage query={query} setQuery={setQuery} products={filtered} onSelect={setSelected} /> : tab === 'admin' ? <AdminPage products={products} socials={socials} setSocials={setSocials} /> : (
+        {tab === 'search' ? <SearchPage query={query} setQuery={setQuery} products={filtered} onSelect={setSelected} /> : tab === 'admin' ? <AdminPage products={products} socials={socials} setSocials={setSocials} featured={featured} setFeatured={setFeatured} /> : (
           <main>
             <section className="feature-grid">
               <div className="orange-backdrop"></div><div className="hero-image"><img src={heroImage} alt="Modelo Urban Fit"/></div><div className="hero-copy"><div className="hero-title">ROUPAS E<br/>CALÇADOS<br/>PARA O<br/>DIA A DIA</div></div>
               <section className="contact-card"><h2>Fale com a gente</h2><p>Estamos sempre por perto!</p><Contact icon={<MessageCircle/>} title="WhatsApp" detail="Falar no WhatsApp" href={socials.whatsapp}/><Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial" href={socials.instagram}/><Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial" href={socials.facebook}/></section>
               <button className="vitrine" onClick={() => document.getElementById('products')?.scrollIntoView({behavior:'smooth'})}><Grid2X2 size={20}/> Vitrine</button>
             </section>
-            <section id="products" className="product-section"><div className="section-head"><h2>Products</h2><button onClick={() => setTab('search')}>Ver Todos <ChevronRight size={18}/></button></div><div className="product-grid">{products.map(p => <ProductCard key={p.name} product={p} onSelect={setSelected}/>)}</div></section>
+            <section id="products" className="product-section"><div className="section-head"><h2>Vitrine</h2><button onClick={() => setTab('search')}>Ver Todos <ChevronRight size={18}/></button></div><div className="product-grid">{featuredProducts.length ? featuredProducts.map(p => <ProductCard key={p.name} product={p} onSelect={setSelected}/>) : <p className="empty-vitrine">Nenhuma peça foi escolhida para a vitrine ainda.</p>}</div></section>
           </main>
         )}
       </div>
@@ -63,12 +67,17 @@ function App() {
 function Contact({icon,title,detail,href}:{icon:React.ReactNode;title:string;detail:string;href:string}) { return <a className="contact-row" href={href || '#'} target="_blank" rel="noopener noreferrer"><span className="contact-icon">{icon}</span><div><strong>{title}</strong><small>{detail}</small></div><ChevronRight size={17}/></a> }
 function ProductCard({product,onSelect}:{product:Product;onSelect:(p:Product)=>void}) { return <button className="product-card" onClick={() => onSelect(product)}><div className="product-photo"><img src={product.image} loading="lazy"/></div><div className="product-name">{product.name}</div><div className="prices"><b>{product.price}</b><del>{product.old}</del></div></button> }
 function SearchPage({query,setQuery,products,onSelect}:{query:string;setQuery:(s:string)=>void;products:Product[];onSelect:(p:Product)=>void}) { return <main className="search-page"><div className="search-box"><Search/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar produtos..."/></div><h1>Resultados</h1><div className="product-grid">{products.map(p=><ProductCard key={p.name} product={p} onSelect={onSelect}/>)}</div></main> }
-function AdminPage({products,socials,setSocials}:{products:Product[];socials:SocialLinks;setSocials:React.Dispatch<React.SetStateAction<SocialLinks>>}) {
+function AdminPage({products,socials,setSocials,featured,setFeatured}:{products:Product[];socials:SocialLinks;setSocials:React.Dispatch<React.SetStateAction<SocialLinks>>;featured:string[];setFeatured:React.Dispatch<React.SetStateAction<string[]>>}) {
   const [draft,setDraft] = useState(socials)
   const [socialOpen,setSocialOpen] = useState(false)
+  const [vitrineOpen,setVitrineOpen] = useState(false)
+  const [featuredDraft,setFeaturedDraft] = useState(featured)
   useEffect(() => setDraft(socials), [socials])
+  useEffect(() => setFeaturedDraft(featured), [featured])
   const save = () => setSocials(draft)
-  return <main className="admin-page"><div className="admin-head"><div><span className="detail-label">URBAN FIT</span><h1>Painel ADM</h1><p>Gerencie sua vitrine e seus produtos.</p></div><button className="admin-add"><Plus size={18}/> Adicionar</button></div><div className="admin-stats"><div><Package/><strong>{products.length}</strong><span>Produtos</span></div><button className="admin-social-button" onClick={() => setSocialOpen(v => !v)}><Instagram/><strong>Redes sociais</strong><span>{socialOpen ? 'Fechar' : 'Editar informações'}</span></button><div><Pencil/><strong>Editar</strong><span>Vitrine</span></div></div>{socialOpen && <section className="social-settings"><div className="social-settings-head"><div><h2>Redes sociais</h2><p>Preencha ou altere as informações da loja.</p></div><button className="social-save" onClick={save}><Save size={17}/> Salvar</button></div><label>WhatsApp<input value={draft.whatsapp} onChange={e=>setDraft({...draft,whatsapp:e.target.value})} placeholder="https://wa.me/5511999999999" /></label><label>Instagram<input value={draft.instagram} onChange={e=>setDraft({...draft,instagram:e.target.value})} placeholder="https://instagram.com/sualoja" /></label><label>Facebook<input value={draft.facebook} onChange={e=>setDraft({...draft,facebook:e.target.value})} placeholder="https://facebook.com/sualoja" /></label><small className="social-help">Use o link completo. Depois de salvar, os botões da vitrine passam a usar os novos links.</small></section>}<div className="admin-list"><h2>Produtos</h2>{products.slice(0,6).map(p=><div className="admin-item" key={p.name}><img src={p.image}/><div><strong>{p.name}</strong><small>{p.price}</small></div><button aria-label={`Editar ${p.name}`}><Pencil size={17}/></button></div>)}</div></main>
+  const saveVitrine = () => setFeatured(featuredDraft)
+  const toggleFeatured = (name:string) => setFeaturedDraft(current => current.includes(name) ? current.filter(n => n !== name) : [...current, name])
+  return <main className="admin-page"><div className="admin-head"><div><span className="detail-label">URBAN FIT</span><h1>Painel ADM</h1><p>Gerencie sua vitrine e seus produtos.</p></div><button className="admin-add"><Plus size={18}/> Adicionar</button></div><div className="admin-stats"><div><Package/><strong>{products.length}</strong><span>Produtos</span></div><button className="admin-social-button" onClick={() => {setSocialOpen(v => !v);setVitrineOpen(false)}}><Instagram/><strong>Redes sociais</strong><span>{socialOpen ? 'Fechar' : 'Editar informações'}</span></button><button className="admin-social-button" onClick={() => {setVitrineOpen(v => !v);setSocialOpen(false)}}><Star/><strong>Vitrine</strong><span>{vitrineOpen ? 'Fechar' : 'Melhores produtos'}</span></button></div>{socialOpen && <section className="social-settings"><div className="social-settings-head"><div><h2>Redes sociais</h2><p>Preencha ou altere as informações da loja.</p></div><button className="social-save" onClick={save}><Save size={17}/> Salvar</button></div><label>WhatsApp<input value={draft.whatsapp} onChange={e=>setDraft({...draft,whatsapp:e.target.value})} placeholder="https://wa.me/5511999999999" /></label><label>Instagram<input value={draft.instagram} onChange={e=>setDraft({...draft,instagram:e.target.value})} placeholder="https://instagram.com/sualoja" /></label><label>Facebook<input value={draft.facebook} onChange={e=>setDraft({...draft,facebook:e.target.value})} placeholder="https://facebook.com/sualoja" /></label><small className="social-help">Use o link completo. Depois de salvar, os botões da vitrine passam a usar os novos links.</small></section>}{vitrineOpen && <section className="social-settings vitrine-settings"><div className="social-settings-head"><div><h2>Vitrine</h2><p>Escolha as melhores peças para aparecer na vitrine.</p></div><button className="social-save" onClick={saveVitrine}><Save size={17}/> Salvar</button></div><div className="featured-list">{products.map(p => <label className="featured-option" key={p.name}><input type="checkbox" checked={featuredDraft.includes(p.name)} onChange={() => toggleFeatured(p.name)}/><img src={p.image}/><span><strong>{p.name}</strong><small>{p.price}</small></span></label>)}</div><small className="social-help">As peças selecionadas aparecem no botão Vitrine da página inicial.</small></section>}<div className="admin-list"><h2>Produtos</h2>{products.slice(0,6).map(p=><div className="admin-item" key={p.name}><img src={p.image}/><div><strong>{p.name}</strong><small>{p.price}</small></div><button aria-label={`Editar ${p.name}`}><Pencil size={17}/></button></div>)}</div></main>
 }
 function ProductView({product,onBack,onAdd,whatsapp}:{product:Product;onBack:()=>void;onAdd:()=>void;whatsapp:string}) {return <main className="detail"><button className="back" onClick={onBack}><ArrowLeft/> Voltar</button><div className="detail-photo"><img src={product.image}/></div><p className="detail-label">URBAN FIT</p><h1>{product.name}</h1><div className="detail-price">{product.price} <del>{product.old}</del></div><p className="detail-text">Peça selecionada da nossa vitrine. Consulte tamanhos e disponibilidade pelo WhatsApp.</p><button className="buy" onClick={onAdd}>Adicionar ao carrinho</button>{whatsapp && <a className="whatsapp-detail" href={whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle size={18}/> Falar no WhatsApp</a>}</main>}
 
