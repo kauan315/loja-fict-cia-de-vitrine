@@ -1,6 +1,6 @@
 const PRODUCT_KEY='urbanfit-products'
 const CART_KEY='urbanfit-cart'
-const MAX_STORAGE_CHARS=3800000
+const MAX_STORAGE_CHARS=2200000
 
 function compactProducts(value:string){
   try{
