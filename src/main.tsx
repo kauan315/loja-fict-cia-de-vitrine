@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Search, ShoppingCart, ChevronRight, Home, Settings2, Grid2X2, MessageCircle, Instagram, Facebook, ArrowLeft, Plus, Package, Pencil, Save, Star } from 'lucide-react'
 import './index.css'
@@ -31,13 +31,30 @@ function App() {
   const [cart, setCart] = useState(0)
   const [selected, setSelected] = useState<Product | null>(null)
   const [vitrineOpen, setVitrineOpen] = useState(false)
+  const [heroIndex, setHeroIndex] = useState(0)
+  const heroRef = useRef<HTMLImageElement>(null)
   const [socials, setSocials] = useState<SocialLinks>(() => { try { return JSON.parse(localStorage.getItem('urbanfit-socials') || '') || defaultSocials } catch { return defaultSocials } })
   const [featured, setFeatured] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('urbanfit-featured') || '') || defaultFeatured } catch { return defaultFeatured } })
   const filtered = useMemo(() => products.filter(p => p.name.toLowerCase().includes(query.toLowerCase())), [query])
   const featuredProducts = useMemo(() => products.filter(p => featured.includes(p.name)), [featured])
+  const heroProduct = featuredProducts[heroIndex]
 
   useEffect(() => { localStorage.setItem('urbanfit-socials', JSON.stringify(socials)) }, [socials])
   useEffect(() => { localStorage.setItem('urbanfit-featured', JSON.stringify(featured)) }, [featured])
+  useEffect(() => { if (heroIndex >= featuredProducts.length) setHeroIndex(0) }, [featuredProducts.length, heroIndex])
+  useEffect(() => {
+    if (featuredProducts.length > 1) {
+      const timer = setInterval(() => setHeroIndex(i => (i + 1) % featuredProducts.length), 6000)
+      return () => clearInterval(timer)
+    }
+  }, [featuredProducts.length])
+  useEffect(() => {
+    if (!featuredProducts.length || !heroRef.current) return
+    heroRef.current.animate(
+      [{ opacity: 0, transform: 'translateY(22px) scale(.97)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }],
+      { duration: 700, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' }
+    )
+  }, [heroIndex, featuredProducts.length])
 
   if (selected) return <ProductView product={selected} onBack={() => setSelected(null)} onAdd={() => setCart(v => v + 1)} whatsapp={socials.whatsapp} />
 
@@ -52,7 +69,7 @@ function App() {
         {tab === 'search' ? <SearchPage query={query} setQuery={setQuery} products={filtered} onSelect={setSelected} /> : tab === 'admin' ? <AdminPage products={products} socials={socials} setSocials={setSocials} featured={featured} setFeatured={setFeatured} /> : vitrineOpen ? <VitrinePage products={featuredProducts} onBack={() => setVitrineOpen(false)} onSelect={setSelected} /> : (
           <main>
             <section className="feature-grid">
-              <div className="orange-backdrop"></div><div className="hero-image"><img src={heroImage} alt="Modelo Urban Fit"/></div><div className="hero-copy"><div className="hero-title">ROUPAS E<br/>CALÇADOS<br/>PARA O<br/>DIA A DIA</div></div>
+              <div className="orange-backdrop"></div><div className="hero-image"><img ref={heroRef} key={heroProduct?.name || 'default'} src={heroProduct?.image || heroImage} alt={heroProduct?.name || 'Modelo Urban Fit'}/></div><div className="hero-copy"><div className="hero-title">ROUPAS E<br/>CALÇADOS<br/>PARA O<br/>DIA A DIA</div></div>
               <section className="contact-card"><h2>Fale com a gente</h2><p>Estamos sempre por perto!</p><Contact icon={<MessageCircle/>} title="WhatsApp" detail="Falar no WhatsApp" href={socials.whatsapp}/><Contact icon={<Instagram/>} title="Instagram" detail="@urbanfit.oficial" href={socials.instagram}/><Contact icon={<Facebook/>} title="Facebook" detail="/urbanfit.oficial" href={socials.facebook}/></section>
               <button className="vitrine" onClick={() => setVitrineOpen(true)}><Grid2X2 size={20}/> Vitrine</button>
             </section>
