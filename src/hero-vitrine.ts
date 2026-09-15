@@ -11,12 +11,14 @@ function setup(){
   const img=document.querySelector('.hero-image img') as HTMLImageElement|null
   if(!img)return
   const products=readProducts()
-  if(!products.length){img.style.opacity='';return}
+  if(!products.length){window.clearInterval(timer);timer=undefined;signature='';img.style.opacity='';return}
   const nextSignature=products.map(p=>p.name+':'+p.image).join('|')
-  if(nextSignature!==signature){signature=nextSignature;index=0}
-  if(!img.dataset.heroVitrine){img.dataset.heroVitrine='1';img.style.transition='opacity .35s ease, transform .35s ease';}
+  if(nextSignature===signature)return
+  signature=nextSignature
+  index=0
+  if(!img.dataset.heroVitrine){img.dataset.heroVitrine='1';img.style.transition='opacity .35s ease, transform .35s ease'}
   const show=()=>{
-    const current=readProducts();
+    const current=readProducts()
     if(!current.length)return
     if(index>=current.length)index=0
     const item=current[index]
@@ -27,7 +29,7 @@ function setup(){
   }
   show()
   window.clearInterval(timer)
-  timer=window.setInterval(show,3500)
+  timer=window.setInterval(show,8000)
 }
 function addStyle(){
  if(document.getElementById(STYLE_ID))return
